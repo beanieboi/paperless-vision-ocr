@@ -21,7 +21,7 @@ func TestDefaults(t *testing.T) {
 	if len(cfg.Languages) != 2 || cfg.Languages[0] != "de-DE" || cfg.Languages[1] != "en-US" {
 		t.Fatalf("languages = %#v", cfg.Languages)
 	}
-	if cfg.Strategy != "auto" || cfg.MaxConcurrentJobs != 1 || cfg.MaxQueuedJobs != 20 {
+	if cfg.Strategy != "standard" || cfg.MaxConcurrentJobs != 1 || cfg.MaxQueuedJobs != 20 {
 		t.Fatalf("unexpected defaults: %#v", cfg)
 	}
 	if cfg.OCRTimeout != 30*time.Minute || cfg.JobTTL != 24*time.Hour || cfg.MaxUploadBytes != 100*1024*1024 {

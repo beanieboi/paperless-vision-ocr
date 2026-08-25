@@ -87,7 +87,7 @@ func load(lookup func(string) (string, bool)) (Config, error) {
 		return Config{}, fmt.Errorf("OCR_LANGUAGES must not be empty")
 	}
 
-	strategy := strings.ToLower(get("OCR_STRATEGY", "auto"))
+	strategy := strings.ToLower(get("OCR_STRATEGY", "standard"))
 	if strategy != "auto" && strategy != "standard" && strategy != "partitioned" {
 		return Config{}, fmt.Errorf("OCR_STRATEGY must be auto, standard, or partitioned")
 	}

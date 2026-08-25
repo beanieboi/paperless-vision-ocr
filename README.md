@@ -20,14 +20,15 @@ searchable PDF
 
 Documents remain on the Mac/LAN. There is no Azure account, cloud document
 processing, Paperless plugin or fork, LLM, Python runtime, or application-side
-Node.js runtime. The installation below extracts the prebuilt native `mac-ocr`
-binary directly from its pinned official archive; Node and npm are not needed.
+Node.js runtime. The installation below builds `mac-ocr` from its pinned official
+source archive and applies the small searchable-PDF whitespace patch carried in
+this repository; Node and npm are not needed.
 
 ## Tested versions
 
 - macOS 26.6.2 (build 25G83, Apple silicon)
-- Go 1.26.2 (the module remains compatible with Go 1.25+)
-- `mac-ocr` 1.1.1
+- Go 1.27.0
+- `mac-ocr` `1.1.1-paperless.1` (upstream 1.1.1 plus the local whitespace patch)
 - Paperless-ngx 3.0.5
 - `azure-ai-documentintelligence` 1.0.2 with `azure-core` 1.38.0
 
@@ -36,17 +37,21 @@ See [STATUS.md](STATUS.md) for the recorded end-to-end result and
 
 ## Install
 
-Install the pinned `mac-ocr` 1.1.1 universal binary directly from its official
-package archive:
+Install the patched `mac-ocr` 1.1.1 universal binary:
 
 ```sh
 ./scripts/install-mac-ocr.sh
 ```
 
-The installer downloads only the versioned upstream archive, verifies its
-published SHA-512 integrity value, and extracts the native executable to
-`$HOME/.local/bin/mac-ocr`. It does not require Node or npm. Confirm the
-configured languages and provide the absolute path when running the service:
+The installer downloads the pinned official GitHub source archive, verifies its
+recorded SHA-256, applies
+`patches/mac-ocr-1.1.1-searchable-pdf-spacing.patch`, and compiles a universal
+binary to `$HOME/.local/bin/mac-ocr`. It requires the Swift toolchain from Xcode
+or Xcode Command Line Tools, but no Node or npm. The patch makes each recognized
+line one invisible PDF text run so Vision's spaces survive PDFKit and Poppler
+extraction. See [docs/mac-ocr-patch.md](docs/mac-ocr-patch.md) for the diagnosis
+and validation. Confirm the configured languages and provide the absolute path
+when running the service:
 
 ```sh
 $HOME/.local/bin/mac-ocr --version
@@ -105,7 +110,7 @@ All configuration uses environment variables.
 | `HOST` | `0.0.0.0` | Listen address |
 | `PORT` | `8080` | Listen port |
 | `OCR_LANGUAGES` | `de-DE,en-US` | Comma-separated BCP-47 hints |
-| `OCR_STRATEGY` | `auto` | `auto`, `standard`, or `partitioned` |
+| `OCR_STRATEGY` | `standard` | `standard` is reliable for ordinary scans; `auto` and `partitioned` are opt-in |
 | `OCR_MAX_CONCURRENT_JOBS` | `1` | Bounded Apple Vision workers |
 | `OCR_MAX_QUEUED_JOBS` | `20` | Pending-job capacity |
 | `OCR_TIMEOUT_MINUTES` | `30` | Total timeout for both `mac-ocr` passes |
@@ -205,6 +210,10 @@ to `~/Library/LaunchAgents/`, validate with `plutil -lint`, and load it with
 - **Unsupported language:** compare every `OCR_LANGUAGES` entry with
   `mac-ocr languages`. Startup intentionally fails instead of silently changing
   recognition behavior.
+- **Words are fused when copying from an archive PDF:** reinstall `mac-ocr` with
+  this repository's installer. Upstream 1.1.1 writes one independent PDF text
+  run per word and leaves spacing to extractor heuristics; the included patch
+  writes Vision's complete line string instead.
 - **Polling never completes:** check structured logs for the job ID and
   `mac_ocr_exit_code`. The default timeout is 30 minutes.
 - **Queue full:** increase `OCR_MAX_QUEUED_JOBS` only after checking disk and
@@ -221,3 +230,8 @@ to `~/Library/LaunchAgents/`, validate with `plutil -lint`, and load it with
 layer. This duplicates recognition work but preserves a stable native CLI
 boundary. The PDF pass intentionally does not use `--ocr-all-pages`, so its
 default page-level existing-text detection remains active.
+
+The default OCR strategy is `standard`. Upstream 1.1.1's `auto` strategy may
+retain a few partial partition observations alongside the full-page pass on
+dense scans. `auto` and `partitioned` remain available explicitly for documents
+whose small text needs the extra passes.

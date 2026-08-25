@@ -28,8 +28,9 @@ Paperless was not patched and no Azure endpoint was contacted.
   `sha256:65a4cabf0169ea7fbd90ab7bb28ba3f8b5909613635acda1a03ad606f34b456b`
 - Azure SDK: `azure-ai-documentintelligence==1.0.2`
 - Azure Core: `azure-core==1.38.0` (Paperless v3.0.5 lockfile resolution)
-- `mac-ocr`: **1.1.1**, native universal Mach-O release
-- Go: **go1.26.2 darwin/arm64**; module language baseline is Go 1.25
+- `mac-ocr`: **1.1.1-paperless.1**, universal Mach-O built from pinned upstream
+  v1.1.1 plus `patches/mac-ocr-1.1.1-searchable-pdf-spacing.patch`
+- Go: **go1.27.0 darwin/arm64**
 - macOS: **26.6.2**, build **25G83**, Apple silicon
 - Poppler `pdftotext`: present and used for text-layer validation
 
@@ -47,6 +48,8 @@ Paperless was not patched and no Azure endpoint was contacted.
 - Direct, context-aware `mac-ocr` execution without a shell.
 - Real `mac-ocr` JSONL parsing and searchable-PDF generation with repeatable
   `-l` flags and `--ocr-strategy`.
+- Explicit whitespace in searchable PDFs: the pinned patch writes one invisible
+  text run per Vision line instead of separator-free per-word runs.
 - Existing searchable pages keep `mac-ocr`'s default skip behavior; the service
   never passes `--ocr-all-pages`.
 - Total subprocess timeout and cancellation on service shutdown.
@@ -61,6 +64,25 @@ Paperless was not patched and no Azure endpoint was contacted.
   queue backpressure, worker success/failure/timeout, cleanup, authentication,
   upload validation, result states, expiry, and PDF serving.
 - A validated LaunchAgent example and operator documentation.
+
+## Searchable-PDF whitespace fix
+
+Upstream `mac-ocr` 1.1.1's JSONL transcript was correct, but its searchable-PDF
+writer omitted whitespace between independently positioned word runs. On a
+real two-page image-only scan, the patch improved extraction from 247 to 460
+words with Poppler and from 369 to 470 words with PDFKit. Vision recognized 474
+words; PDFKit retained 455 in the same sequence (96.0%). Raster comparisons of
+both pages found zero visible pixel differences.
+
+The full upstream suite passed with 238 tests in 37 suites. The installer was
+also tested end to end: it verified the pinned source archive, applied the
+patch, built an arm64/x86_64 universal binary, and reported
+`1.1.1-paperless.1`.
+
+The adapter now defaults to `OCR_STRATEGY=standard`. Upstream `auto` accepted 11
+extra partition observations on the affected scan, including partial overlaps;
+operators can still opt into `auto` or `partitioned` for difficult small text.
+See [docs/mac-ocr-patch.md](docs/mac-ocr-patch.md).
 
 ## Compatibility results
 
@@ -177,7 +199,8 @@ test when the executable is unavailable.
 - The configured Paperless endpoint is an origin without the SDK-owned
   `/documentintelligence` suffix.
 - Paperless reads only `AnalyzeResult.content` and the generated PDF byte stream.
-- `mac-ocr` retains the CLI options and JSONL `text` field documented for 1.1.1.
+- `mac-ocr` retains the CLI options and JSONL `text` field documented for 1.1.1;
+  the local patch only changes searchable-PDF text-layer serialization.
 
 The full route and schema evidence is in [docs/protocol.md](docs/protocol.md), and
 the reproducible Paperless procedure is in
