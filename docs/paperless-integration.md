@@ -38,10 +38,12 @@ the supported remote-OCR variables was changed.
 Run the OCR service directly on the Mac:
 
 ```sh
+./scripts/install-mac-ocr.sh
+
 HOST=0.0.0.0 \
 PORT=8080 \
 OCR_API_KEY=dummy \
-MAC_OCR_PATH=/absolute/path/to/mac-ocr \
+MAC_OCR_PATH="$HOME/.local/bin/mac-ocr" \
 ./paperless-macos-ocr
 ```
 

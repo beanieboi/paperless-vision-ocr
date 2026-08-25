@@ -129,9 +129,9 @@ database storage.
 ## Build and run
 
 ```sh
-npm install -g mac-ocr
+./scripts/install-mac-ocr.sh
 go build -trimpath -o paperless-macos-ocr ./cmd/paperless-macos-ocr
-OCR_API_KEY=dummy ./paperless-macos-ocr
+MAC_OCR_PATH="$HOME/.local/bin/mac-ocr" OCR_API_KEY=dummy ./paperless-macos-ocr
 ```
 
 Paperless configuration:

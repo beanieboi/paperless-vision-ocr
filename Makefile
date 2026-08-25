@@ -1,9 +1,12 @@
-.PHONY: build test race run fmt vet
+.PHONY: build install-mac-ocr test race run fmt vet
 
 GO ?= go
 
 build:
 	$(GO) build -trimpath -ldflags "-s -w -X main.version=$${VERSION:-dev}" -o paperless-macos-ocr ./cmd/paperless-macos-ocr
+
+install-mac-ocr:
+	./scripts/install-mac-ocr.sh
 
 test:
 	$(GO) test ./...

@@ -46,7 +46,7 @@ func run() error {
 	startupCtx, cancelStartup := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancelStartup()
 	if err := runner.Ready(startupCtx); err != nil {
-		return fmt.Errorf("mac-ocr executable not found or unusable at %q: %w\n\nInstall it with:\n\n  npm install -g mac-ocr\n\nor configure MAC_OCR_PATH", cfg.MacOCRPath, err)
+		return fmt.Errorf("mac-ocr executable not found or unusable at %q: %w\n\nInstall the pinned native binary with scripts/install-mac-ocr.sh (see README), or configure MAC_OCR_PATH", cfg.MacOCRPath, err)
 	}
 	if err := runner.ValidateLanguages(startupCtx); err != nil {
 		return fmt.Errorf("mac-ocr language validation: %w", err)

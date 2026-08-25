@@ -20,8 +20,8 @@ searchable PDF
 
 Documents remain on the Mac/LAN. There is no Azure account, cloud document
 processing, Paperless plugin or fork, LLM, Python runtime, or application-side
-Node.js runtime. Node/npm is currently only an installation mechanism for the
-prebuilt native `mac-ocr` binary.
+Node.js runtime. The installation below extracts the prebuilt native `mac-ocr`
+binary directly from its pinned official archive; Node and npm are not needed.
 
 ## Tested versions
 
@@ -36,20 +36,33 @@ See [STATUS.md](STATUS.md) for the recorded end-to-end result and
 
 ## Install
 
-Install `mac-ocr` and confirm the configured languages exist:
+Install the pinned `mac-ocr` 1.1.1 universal binary directly from its official
+package archive:
 
 ```sh
-npm install -g mac-ocr
-mac-ocr --version
-mac-ocr languages | grep -E '^(de-DE|en-US)$'
+./scripts/install-mac-ocr.sh
+```
+
+The installer downloads only the versioned upstream archive, verifies its
+published SHA-512 integrity value, and extracts the native executable to
+`$HOME/.local/bin/mac-ocr`. It does not require Node or npm. Confirm the
+configured languages and provide the absolute path when running the service:
+
+```sh
+$HOME/.local/bin/mac-ocr --version
+$HOME/.local/bin/mac-ocr languages | grep -E '^(de-DE|en-US)$'
 ```
 
 Build and run the service:
 
 ```sh
 go build -trimpath -o paperless-macos-ocr ./cmd/paperless-macos-ocr
-./paperless-macos-ocr
+MAC_OCR_PATH="$HOME/.local/bin/mac-ocr" ./paperless-macos-ocr
 ```
+
+Set `MAC_OCR_INSTALL_DIR` when invoking the installer to choose a different
+destination directory. `make install-mac-ocr` is an equivalent convenience
+target.
 
 The server fails fast with a clear message if `mac-ocr` is missing, cannot run,
 or does not support a configured language. The default listener is
