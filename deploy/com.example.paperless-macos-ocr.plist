@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.example.paperless-macos-ocr</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/usr/local/bin/paperless-macos-ocr</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>HOST</key><string>0.0.0.0</string>
+    <key>PORT</key><string>8080</string>
+    <key>MAC_OCR_PATH</key><string>/usr/local/bin/mac-ocr</string>
+    <key>OCR_LANGUAGES</key><string>de-DE,en-US</string>
+    <key>OCR_STRATEGY</key><string>auto</string>
+    <key>OCR_MAX_CONCURRENT_JOBS</key><string>1</string>
+    <key>OCR_MAX_QUEUED_JOBS</key><string>20</string>
+    <key>OCR_WORK_DIR</key><string>/var/tmp/paperless-macos-ocr</string>
+    <key>LOG_LEVEL</key><string>INFO</string>
+  </dict>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <dict>
+    <key>SuccessfulExit</key><false/>
+  </dict>
+  <key>ProcessType</key>
+  <string>Background</string>
+  <key>ThrottleInterval</key>
+  <integer>10</integer>
+  <key>StandardOutPath</key>
+  <string>/var/tmp/paperless-macos-ocr.log</string>
+  <key>StandardErrorPath</key>
+  <string>/var/tmp/paperless-macos-ocr.error.log</string>
+</dict>
+</plist>

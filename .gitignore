@@ -1,0 +1,4 @@
+/paperless-macos-ocr
+*.log
+.DS_Store
+tests/azure-sdk/.venv/
