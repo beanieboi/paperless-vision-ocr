@@ -28,8 +28,8 @@ Paperless was not patched and no Azure endpoint was contacted.
   `sha256:65a4cabf0169ea7fbd90ab7bb28ba3f8b5909613635acda1a03ad606f34b456b`
 - Azure SDK: `azure-ai-documentintelligence==1.0.2`
 - Azure Core: `azure-core==1.38.0` (Paperless v3.0.5 lockfile resolution)
-- `mac-ocr`: **1.1.1-paperless.1**, universal Mach-O built from pinned upstream
-  v1.1.1 plus `patches/mac-ocr-1.1.1-searchable-pdf-spacing.patch`
+- `mac-ocr`: **1.1.1-paperless.1**, universal Mach-O built from pinned
+  `beanieboi/mac-ocr` commit `b26091f7ef0d5390c5c586c79f1cb06113223a50`
 - Go: **go1.27.0 darwin/arm64**
 - macOS: **26.6.2**, build **25G83**, Apple silicon
 - Poppler `pdftotext`: present and used for text-layer validation
@@ -74,10 +74,9 @@ words with Poppler and from 369 to 470 words with PDFKit. Vision recognized 474
 words; PDFKit retained 455 in the same sequence (96.0%). Raster comparisons of
 both pages found zero visible pixel differences.
 
-The full upstream suite passed with 238 tests in 37 suites. The installer was
-also tested end to end: it verified the pinned source archive, applied the
-patch, built an arm64/x86_64 universal binary, and reported
-`1.1.1-paperless.1`.
+The fork's full suite passed with 252 tests in 39 suites. The installer was also
+tested end to end: it fetched and verified the pinned fork commit, built an
+arm64/x86_64 universal binary, and reported `1.1.1-paperless.1`.
 
 The adapter now defaults to `OCR_STRATEGY=standard`. Upstream `auto` accepted 11
 extra partition observations on the affected scan, including partial overlaps;
@@ -207,8 +206,9 @@ test when the executable is unavailable.
 - The configured Paperless endpoint is an origin without the SDK-owned
   `/documentintelligence` suffix.
 - Paperless reads only `AnalyzeResult.content` and the generated PDF byte stream.
-- `mac-ocr` retains the CLI options and JSONL `text` field documented for 1.1.1;
-  the local patch only changes searchable-PDF text-layer serialization.
+- Pinned fork commit `b26091f` retains the CLI options and JSONL `text` field
+  used by the service; its relevant behavior change is searchable-PDF
+  text-layer serialization.
 
 The full route and schema evidence is in [docs/protocol.md](docs/protocol.md), and
 the reproducible Paperless procedure is in

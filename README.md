@@ -19,16 +19,17 @@ searchable PDF
 ```
 
 Documents remain on the Mac/LAN. There is no Azure account, cloud document
-processing, Paperless plugin or fork, LLM, Python runtime, or application-side
-Node.js runtime. The installation below builds `mac-ocr` from its pinned official
-source archive and applies the small searchable-PDF whitespace patch carried in
-this repository; Node and npm are not needed.
+processing, Paperless plugin or Paperless fork, LLM, Python runtime, or
+application-side Node.js runtime. The installation below builds `mac-ocr` from
+the exact tested commit in the `beanieboi/mac-ocr` fork; Node and npm are not
+needed.
 
 ## Tested versions
 
 - macOS 26.6.2 (build 25G83, Apple silicon)
 - Go 1.27.0
-- `mac-ocr` `1.1.1-paperless.1` (upstream 1.1.1 plus the local whitespace patch)
+- `mac-ocr` `1.1.1-paperless.1`, fork commit
+  [`b26091f`](https://github.com/beanieboi/mac-ocr/commit/b26091f7ef0d5390c5c586c79f1cb06113223a50)
 - Paperless-ngx 3.0.5
 - `azure-ai-documentintelligence` 1.0.2 with `azure-core` 1.38.0
 
@@ -43,12 +44,12 @@ Install the patched `mac-ocr` 1.1.1 universal binary:
 ./scripts/install-mac-ocr.sh
 ```
 
-The installer downloads the pinned official GitHub source archive, verifies its
-recorded SHA-256, applies
-`patches/mac-ocr-1.1.1-searchable-pdf-spacing.patch`, and compiles a universal
-binary to `$HOME/.local/bin/mac-ocr`. It requires the Swift toolchain from Xcode
-or Xcode Command Line Tools, but no Node or npm. The patch makes each recognized
-line one invisible PDF text run so Vision's spaces survive PDFKit and Poppler
+The installer fetches only fork commit
+`b26091f7ef0d5390c5c586c79f1cb06113223a50`, verifies the checkout resolved to
+that exact commit, and compiles a universal binary to
+`$HOME/.local/bin/mac-ocr`. It requires Git and the Swift toolchain from Xcode or
+Xcode Command Line Tools, but no Node or npm. The fork writes each recognized
+line as one invisible PDF text run so Vision's spaces survive PDFKit and Poppler
 extraction. See [docs/mac-ocr-patch.md](docs/mac-ocr-patch.md) for the diagnosis
 and validation. Confirm the configured languages and provide the absolute path
 when running the service:
@@ -212,8 +213,8 @@ to `~/Library/LaunchAgents/`, validate with `plutil -lint`, and load it with
   recognition behavior.
 - **Words are fused when copying from an archive PDF:** reinstall `mac-ocr` with
   this repository's installer. Upstream 1.1.1 writes one independent PDF text
-  run per word and leaves spacing to extractor heuristics; the included patch
-  writes Vision's complete line string instead.
+  run per word and leaves spacing to extractor heuristics; the pinned fork
+  commit writes Vision's complete line string instead.
 - **Polling never completes:** check structured logs for the job ID and
   `mac_ocr_exit_code`. The default timeout is 30 minutes.
 - **Queue full:** increase `OCR_MAX_QUEUED_JOBS` only after checking disk and

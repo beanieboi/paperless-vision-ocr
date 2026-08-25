@@ -16,26 +16,27 @@ whitespace is not preserved consistently by PDF extractors.
 
 ## Patch
 
-`patches/mac-ocr-1.1.1-searchable-pdf-spacing.patch` changes the invisible layer
-to write one CoreText run per Vision observation using `observation.text` and the
-observation's line bounding box. It retains an identity text matrix and natural
-glyph metrics. This explicitly serializes Vision's whitespace without reviving
-the older horizontal-scaling bug that caused inter-letter spaces.
+Fork commit
+[`b26091f`](https://github.com/beanieboi/mac-ocr/commit/b26091f7ef0d5390c5c586c79f1cb06113223a50)
+changes the invisible layer to write one CoreText run per Vision observation
+using `observation.text` and the observation's line bounding box. It retains an
+identity text matrix and natural glyph metrics. This explicitly serializes
+Vision's whitespace without reviving the older horizontal-scaling bug that
+caused inter-letter spaces.
 
 The visible PDF page is untouched. Selection geometry is approximate at the line
 level rather than positioned from every word box; individual words remain
 searchable and selectable in reading order.
 
-The patch also adds a generated dense-line regression test. It is applied only
-to the pinned official `v1.1.1` source archive, whose SHA-256 is verified before
-building.
+The commit also adds a generated dense-line regression test and stamps fork
+builds as `1.1.1-paperless.1`.
 
 ## Validation
 
-The patch was tested on macOS with the complete upstream suite:
+The commit was tested on macOS against the fork's current `develop` suite:
 
 ```text
-238 tests in 37 suites passed
+252 tests in 39 suites passed
 ```
 
 On the affected two-page image-only scan, using identical languages and the
@@ -63,6 +64,5 @@ difficult small-text documents, but they are no longer the safe default.
 ./scripts/install-mac-ocr.sh
 ```
 
-The installer downloads the pinned source archive, verifies it, applies the
-patch, stamps it as `1.1.1-paperless.1`, builds a universal native binary, and installs it to
-`$HOME/.local/bin/mac-ocr` by default.
+The installer fetches and verifies the exact fork commit, builds a universal
+native binary, and installs it to `$HOME/.local/bin/mac-ocr` by default.
