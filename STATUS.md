@@ -124,6 +124,13 @@ lines were extracted correctly; the service recorded 7 ms queue time and
 1,578 ms OCR time. The deployed universal binary has SHA-256
 `0ad042d00f0567b3da313a9a98063b2173c95543f721d477fcab84b761709b14`.
 
+A subsequent physical scanner run completed the full production path into
+Paperless document 1112. The downloaded 9,636,625-byte original was image-only;
+the 9,652,099-byte archive contained 56 selectable lines. PDFKit found no line
+crossing either page boundary, and all 226 normalized tokens in Paperless's
+indexed OCR content matched the archive's embedded tokens in the same order.
+Raster comparisons found zero differing pixels on both pages.
+
 ### Paperless-ngx Docker
 
 An isolated Paperless-ngx 3.0.5 deployment with Redis 8 submitted the same
