@@ -28,8 +28,8 @@ Paperless was not patched and no Azure endpoint was contacted.
   `sha256:65a4cabf0169ea7fbd90ab7bb28ba3f8b5909613635acda1a03ad606f34b456b`
 - Azure SDK: `azure-ai-documentintelligence==1.0.2`
 - Azure Core: `azure-core==1.38.0` (Paperless v3.0.5 lockfile resolution)
-- `mac-ocr`: **1.1.1-paperless.1**, universal Mach-O built from pinned
-  `beanieboi/mac-ocr` commit `b26091f7ef0d5390c5c586c79f1cb06113223a50`
+- `mac-ocr`: **1.1.1-paperless.2**, universal Mach-O built from pinned
+  `beanieboi/mac-ocr` commit `516fdd0f30f09084b9616156463228f9972d8618`
 - Go: **go1.27.0 darwin/arm64**
 - macOS: **26.6.2**, build **25G83**, Apple silicon
 - Poppler `pdftotext`: present and used for text-layer validation
@@ -50,6 +50,8 @@ Paperless was not patched and no Azure endpoint was contacted.
   `-l` flags and `--ocr-strategy`.
 - Explicit whitespace in searchable PDFs: the pinned patch writes one invisible
   text run per Vision line instead of separator-free per-word runs.
+- Long invisible lines are fitted to their Vision bounding boxes so selectable
+  trailing text cannot run beyond the page and be clipped by PDF readers.
 - Existing searchable pages keep `mac-ocr`'s default skip behavior; the service
   never passes `--ocr-all-pages`.
 - Total subprocess timeout and cancellation on service shutdown.
@@ -74,9 +76,10 @@ words with Poppler and from 369 to 470 words with PDFKit. Vision recognized 474
 words; PDFKit retained 455 in the same sequence (96.0%). Raster comparisons of
 both pages found zero visible pixel differences.
 
-The fork's full suite passed with 252 tests in 39 suites. The installer was also
-tested end to end: it fetched and verified the pinned fork commit, built an
-arm64/x86_64 universal binary, and reported `1.1.1-paperless.1`.
+The fork's full suite passed with 252 tests in 39 suites after the whitespace
+change. The subsequent width-fitting regression and the searchable-PDF suite
+pass on `1.1.1-paperless.2`. The installer fetches and verifies the pinned fork
+commit and builds an arm64/x86_64 universal binary.
 
 The adapter now defaults to `OCR_STRATEGY=standard`. Upstream `auto` accepted 11
 extra partition observations on the affected scan, including partial overlaps;
@@ -112,8 +115,14 @@ smoke test against the Mac mini produced the same recognized text and a
 38,108-byte searchable PDF. `pdftotext` again extracted both expected lines.
 The service recorded 7 ms queue duration and 1,631 ms OCR time on this
 first job after restart. The deployed service identifies itself as commit
-`a2c6661`, uses `mac-ocr 1.1.1-paperless.1`, and reports
+`a2c6661`, uses `mac-ocr 1.1.1-paperless.2`, and reports
 `ocr_strategy=standard` and ready health.
+
+After deploying the line-width fix, the same Azure-compatible smoke sequence
+again succeeded. It produced a 38,105-byte searchable PDF whose two fixture
+lines were extracted correctly; the service recorded 7 ms queue time and
+1,578 ms OCR time. The deployed universal binary has SHA-256
+`0ad042d00f0567b3da313a9a98063b2173c95543f721d477fcab84b761709b14`.
 
 ### Paperless-ngx Docker
 
@@ -184,11 +193,19 @@ go test ./...
 go test -race ./...
 go build -trimpath ./cmd/paperless-macos-ocr
 plutil -lint deploy/com.example.paperless-macos-ocr.plist
+swift test --filter SearchablePDFTests  # in the pinned mac-ocr fork
 ```
 
 The real `TestMacOCRIntegration` also passed with `mac-ocr` on `PATH`; it was not
 skipped. Normal tests pass without `mac-ocr` and skip only that native integration
 test when the executable is unavailable.
+
+The fork's focused searchable-PDF suite passes on commit `516fdd0`, including
+the explicit-spacing and line-width regressions. Two attempts to rerun all fork
+tests under Xcode 17F113 stalled in the pre-existing `TestSupport.run` pipe wait
+(`CustomWordsTests` once and `PDFDPITests` once); each implicated suite passes
+when isolated, and neither exercises the changed line-fitting function. This is
+a test-harness deadlock, not a recorded product-test failure.
 
 ## Remaining TODOs
 
@@ -206,7 +223,7 @@ test when the executable is unavailable.
 - The configured Paperless endpoint is an origin without the SDK-owned
   `/documentintelligence` suffix.
 - Paperless reads only `AnalyzeResult.content` and the generated PDF byte stream.
-- Pinned fork commit `b26091f` retains the CLI options and JSONL `text` field
+- Pinned fork commit `516fdd0` retains the CLI options and JSONL `text` field
   used by the service; its relevant behavior change is searchable-PDF
   text-layer serialization.
 

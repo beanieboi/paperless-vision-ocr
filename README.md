@@ -28,8 +28,8 @@ needed.
 
 - macOS 26.6.2 (build 25G83, Apple silicon)
 - Go 1.27.0
-- `mac-ocr` `1.1.1-paperless.1`, fork commit
-  [`b26091f`](https://github.com/beanieboi/mac-ocr/commit/b26091f7ef0d5390c5c586c79f1cb06113223a50)
+- `mac-ocr` `1.1.1-paperless.2`, fork commit
+  [`516fdd0`](https://github.com/beanieboi/mac-ocr/commit/516fdd0f30f09084b9616156463228f9972d8618)
 - Paperless-ngx 3.0.5
 - `azure-ai-documentintelligence` 1.0.2 with `azure-core` 1.38.0
 
@@ -45,14 +45,15 @@ Install the patched `mac-ocr` 1.1.1 universal binary:
 ```
 
 The installer fetches only fork commit
-`b26091f7ef0d5390c5c586c79f1cb06113223a50`, verifies the checkout resolved to
+`516fdd0f30f09084b9616156463228f9972d8618`, verifies the checkout resolved to
 that exact commit, and compiles a universal binary to
 `$HOME/.local/bin/mac-ocr`. It requires Git and the Swift toolchain from Xcode or
 Xcode Command Line Tools, but no Node or npm. The fork writes each recognized
-line as one invisible PDF text run so Vision's spaces survive PDFKit and Poppler
-extraction. See [docs/mac-ocr-patch.md](docs/mac-ocr-patch.md) for the diagnosis
-and validation. Confirm the configured languages and provide the absolute path
-when running the service:
+line as one invisible PDF text run and fits that run to Vision's line box, so
+spaces survive extraction without selectable text being clipped at the page
+edge. See [docs/mac-ocr-patch.md](docs/mac-ocr-patch.md) for the diagnosis and
+validation. Confirm the configured languages and provide the absolute path when
+running the service:
 
 ```sh
 $HOME/.local/bin/mac-ocr --version

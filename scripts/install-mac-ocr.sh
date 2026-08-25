@@ -2,10 +2,9 @@
 
 set -eu
 
-version="1.1.1"
-patched_version="1.1.1-paperless.1"
+patched_version="1.1.1-paperless.2"
 repository_url="https://github.com/beanieboi/mac-ocr.git"
-repository_commit="b26091f7ef0d5390c5c586c79f1cb06113223a50"
+repository_commit="516fdd0f30f09084b9616156463228f9972d8618"
 install_dir="${MAC_OCR_INSTALL_DIR:-${HOME}/.local/bin}"
 temporary_dir="$(mktemp -d "${TMPDIR:-/tmp}/paperless-macos-ocr.XXXXXX")"
 
@@ -56,6 +55,6 @@ if [ "${installed_version}" != "${patched_version}" ]; then
 	exit 1
 fi
 
-echo "Installed patched mac-ocr ${version} to ${install_dir}/mac-ocr"
+echo "Installed patched mac-ocr ${installed_version} to ${install_dir}/mac-ocr"
 echo "Source: ${repository_url}@${repository_commit}"
 echo "Configure MAC_OCR_PATH=${install_dir}/mac-ocr"
