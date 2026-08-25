@@ -108,6 +108,14 @@ The 16,732-byte image-only PDF became a distinct 39,055-byte searchable PDF.
 `pdftotext` extracted both expected strings. The initial recorded run took 574
 ms end to end inside the service.
 
+After deploying the whitespace patch, a final Azure-compatible POST/poll/PDF
+smoke test against the Mac mini produced the same recognized text and a
+38,108-byte searchable PDF. `pdftotext` again extracted both expected lines.
+The service recorded 7 ms queue duration and 1,631 ms OCR time on this
+first job after restart. The deployed service identifies itself as commit
+`a2c6661`, uses `mac-ocr 1.1.1-paperless.1`, and reports
+`ocr_strategy=standard` and ready health.
+
 ### Paperless-ngx Docker
 
 An isolated Paperless-ngx 3.0.5 deployment with Redis 8 submitted the same
