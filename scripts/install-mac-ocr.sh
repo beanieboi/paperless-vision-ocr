@@ -6,7 +6,7 @@ patched_version="1.1.1-paperless.2"
 repository_url="https://github.com/beanieboi/mac-ocr.git"
 repository_commit="516fdd0f30f09084b9616156463228f9972d8618"
 install_dir="${MAC_OCR_INSTALL_DIR:-${HOME}/.local/bin}"
-temporary_dir="$(mktemp -d "${TMPDIR:-/tmp}/paperless-macos-ocr.XXXXXX")"
+temporary_dir="$(mktemp -d "${TMPDIR:-/tmp}/paperless-vision-ocr.XXXXXX")"
 
 cleanup() {
 	rm -rf -- "${temporary_dir}"

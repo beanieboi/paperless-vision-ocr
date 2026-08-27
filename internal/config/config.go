@@ -107,7 +107,7 @@ func load(lookup func(string) (string, bool)) (Config, error) {
 		return Config{}, fmt.Errorf("HOST is invalid")
 	}
 
-	workDir := get("OCR_WORK_DIR", filepath.Join(os.TempDir(), "paperless-macos-ocr"))
+	workDir := get("OCR_WORK_DIR", filepath.Join(os.TempDir(), "paperless-vision-ocr"))
 	if !filepath.IsAbs(workDir) {
 		return Config{}, fmt.Errorf("OCR_WORK_DIR must be absolute")
 	}

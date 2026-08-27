@@ -3,7 +3,7 @@
 GO ?= go
 
 build:
-	$(GO) build -trimpath -ldflags "-s -w -X main.version=$${VERSION:-dev}" -o paperless-macos-ocr ./cmd/paperless-macos-ocr
+	$(GO) build -trimpath -ldflags "-s -w -X main.version=$${VERSION:-dev}" -o paperless-vision-ocr ./cmd/paperless-vision-ocr
 
 install-mac-ocr:
 	./scripts/install-mac-ocr.sh
@@ -15,7 +15,7 @@ race:
 	$(GO) test -race ./...
 
 run:
-	$(GO) run ./cmd/paperless-macos-ocr
+	$(GO) run ./cmd/paperless-vision-ocr
 
 fmt:
 	$(GO) fmt ./...

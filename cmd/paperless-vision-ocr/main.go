@@ -12,18 +12,18 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/beanieboi/paperless-mac-ocr/internal/api"
-	"github.com/beanieboi/paperless-mac-ocr/internal/config"
-	"github.com/beanieboi/paperless-mac-ocr/internal/jobs"
-	"github.com/beanieboi/paperless-mac-ocr/internal/ocr"
-	"github.com/beanieboi/paperless-mac-ocr/internal/worker"
+	"github.com/beanieboi/paperless-vision-ocr/internal/api"
+	"github.com/beanieboi/paperless-vision-ocr/internal/config"
+	"github.com/beanieboi/paperless-vision-ocr/internal/jobs"
+	"github.com/beanieboi/paperless-vision-ocr/internal/ocr"
+	"github.com/beanieboi/paperless-vision-ocr/internal/worker"
 )
 
 var version = "dev"
 
 func main() {
 	if err := run(); err != nil {
-		fmt.Fprintln(os.Stderr, "paperless-macos-ocr:", err)
+		fmt.Fprintln(os.Stderr, "paperless-vision-ocr:", err)
 		os.Exit(1)
 	}
 }
@@ -63,7 +63,7 @@ func run() error {
 	}
 
 	logger.Info("service starting",
-		"service", "paperless-macos-ocr", "version", version, "go_version", runtime.Version(),
+		"service", "paperless-vision-ocr", "version", version, "go_version", runtime.Version(),
 		"mac_ocr_path", cfg.MacOCRPath, "mac_ocr_version", runner.Version(startupCtx),
 		"address", cfg.Address(), "work_dir", cfg.WorkDir, "languages", cfg.Languages,
 		"ocr_strategy", cfg.Strategy, "max_concurrent_jobs", cfg.MaxConcurrentJobs,

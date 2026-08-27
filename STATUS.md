@@ -10,7 +10,7 @@ The primary end-to-end goal works:
 image-only PDF
   → unmodified Paperless-ngx 3.0.5
   → Azure Document Intelligence SDK 1.0.2 HTTP sequence
-  → native Go paperless-macos-ocr service
+  → native Go paperless-vision-ocr service
   → native mac-ocr 1.1.1 / Apple Vision
   → searchable PDF and OCR text
   → Paperless archive and normal full-text search hit
@@ -175,8 +175,8 @@ database storage.
 
 ```sh
 ./scripts/install-mac-ocr.sh
-go build -trimpath -o paperless-macos-ocr ./cmd/paperless-macos-ocr
-MAC_OCR_PATH="$HOME/.local/bin/mac-ocr" OCR_API_KEY=dummy ./paperless-macos-ocr
+go build -trimpath -o paperless-vision-ocr ./cmd/paperless-vision-ocr
+MAC_OCR_PATH="$HOME/.local/bin/mac-ocr" OCR_API_KEY=dummy ./paperless-vision-ocr
 ```
 
 Paperless configuration:
@@ -198,8 +198,8 @@ gofmt -w ./cmd ./internal ./tests/compat-server  # equivalent file expansion use
 go vet ./...
 go test ./...
 go test -race ./...
-go build -trimpath ./cmd/paperless-macos-ocr
-plutil -lint deploy/com.example.paperless-macos-ocr.plist
+go build -trimpath ./cmd/paperless-vision-ocr
+plutil -lint deploy/com.example.paperless-vision-ocr.plist
 swift test --filter SearchablePDFTests  # in the pinned mac-ocr fork
 ```
 

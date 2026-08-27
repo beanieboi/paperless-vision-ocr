@@ -2,7 +2,7 @@
 """Exercise the exact Azure SDK call sequence used by Paperless-ngx.
 
 This is a development-only compatibility harness. Python and the Azure SDK are
-not runtime dependencies of paperless-macos-ocr.
+not runtime dependencies of paperless-vision-ocr.
 """
 
 import argparse

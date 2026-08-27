@@ -3,10 +3,10 @@
 <plist version="1.0">
 <dict>
   <key>Label</key>
-  <string>com.example.paperless-macos-ocr</string>
+  <string>com.example.paperless-vision-ocr</string>
   <key>ProgramArguments</key>
   <array>
-    <string>/usr/local/bin/paperless-macos-ocr</string>
+    <string>/usr/local/bin/paperless-vision-ocr</string>
   </array>
   <key>EnvironmentVariables</key>
   <dict>
@@ -17,7 +17,7 @@
     <key>OCR_STRATEGY</key><string>standard</string>
     <key>OCR_MAX_CONCURRENT_JOBS</key><string>1</string>
     <key>OCR_MAX_QUEUED_JOBS</key><string>20</string>
-    <key>OCR_WORK_DIR</key><string>/var/tmp/paperless-macos-ocr</string>
+    <key>OCR_WORK_DIR</key><string>/var/tmp/paperless-vision-ocr</string>
     <key>LOG_LEVEL</key><string>INFO</string>
   </dict>
   <key>RunAtLoad</key>
@@ -31,8 +31,8 @@
   <key>ThrottleInterval</key>
   <integer>10</integer>
   <key>StandardOutPath</key>
-  <string>/var/tmp/paperless-macos-ocr.log</string>
+  <string>/var/tmp/paperless-vision-ocr.log</string>
   <key>StandardErrorPath</key>
-  <string>/var/tmp/paperless-macos-ocr.error.log</string>
+  <string>/var/tmp/paperless-vision-ocr.error.log</string>
 </dict>
 </plist>

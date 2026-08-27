@@ -1,6 +1,6 @@
-# paperless-macos-ocr
+# paperless-vision-ocr
 
-`paperless-macos-ocr` lets an unmodified Paperless-ngx installation use Apple
+`paperless-vision-ocr` lets an unmodified Paperless-ngx installation use Apple
 Vision for remote OCR. It impersonates only the three Azure Document
 Intelligence endpoints Paperless actually calls.
 
@@ -13,7 +13,7 @@ Paperless-ngx
    ↓
 Azure Document Intelligence compatibility API
    ↓
-paperless-macos-ocr (one Go binary)
+paperless-vision-ocr (one Go binary)
    ↓
 mac-ocr
    ↓
@@ -45,8 +45,8 @@ See [STATUS.md](STATUS.md) for the recorded end-to-end result and
 Clone the repository:
 
 ```sh
-git clone https://github.com/beanieboi/paperless-mac-ocr.git
-cd paperless-mac-ocr
+git clone https://github.com/beanieboi/paperless-vision-ocr.git
+cd paperless-vision-ocr
 ```
 
 Install the patched `mac-ocr` 1.1.1 universal binary:
@@ -74,8 +74,8 @@ $HOME/.local/bin/mac-ocr languages | grep -E '^(de-DE|en-US)$'
 Build and run the service:
 
 ```sh
-go build -trimpath -o paperless-macos-ocr ./cmd/paperless-macos-ocr
-MAC_OCR_PATH="$HOME/.local/bin/mac-ocr" ./paperless-macos-ocr
+go build -trimpath -o paperless-vision-ocr ./cmd/paperless-vision-ocr
+MAC_OCR_PATH="$HOME/.local/bin/mac-ocr" ./paperless-vision-ocr
 ```
 
 Set `MAC_OCR_INSTALL_DIR` when invoking the installer to choose a different
@@ -102,7 +102,7 @@ LAN address. Do not append `/documentintelligence`; Microsoft's SDK appends it.
 For authentication, set the same non-empty value on both sides:
 
 ```env
-# paperless-macos-ocr
+# paperless-vision-ocr
 OCR_API_KEY=choose-a-long-random-value
 
 # Paperless
@@ -128,7 +128,7 @@ All configuration uses environment variables.
 | `OCR_MAX_QUEUED_JOBS` | `20` | Pending-job capacity |
 | `OCR_TIMEOUT_MINUTES` | `30` | Total timeout for both `mac-ocr` passes |
 | `OCR_JOB_TTL_HOURS` | `24` | Result and file retention |
-| `OCR_WORK_DIR` | OS temp dir + `paperless-macos-ocr` | Per-job storage |
+| `OCR_WORK_DIR` | OS temp dir + `paperless-vision-ocr` | Per-job storage |
 | `OCR_API_KEY` | empty | Optional subscription key requirement |
 | `OCR_MAX_UPLOAD_MB` | `100` | Decoded PDF upload limit |
 | `MAC_OCR_PATH` | `mac-ocr` | Executable name or absolute path |
@@ -206,10 +206,10 @@ verification. It is not imported, embedded, or invoked by the service.
 ## launchd
 
 An example LaunchAgent is at
-[deploy/com.example.paperless-macos-ocr.plist](deploy/com.example.paperless-macos-ocr.plist).
+[deploy/com.example.paperless-vision-ocr.plist](deploy/com.example.paperless-vision-ocr.plist).
 Install the two binaries at the paths in that file (or edit the paths), copy it
 to `~/Library/LaunchAgents/`, validate with `plutil -lint`, and load it with
-`launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.example.paperless-macos-ocr.plist`.
+`launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.example.paperless-vision-ocr.plist`.
 
 ## Troubleshooting
 
@@ -251,4 +251,4 @@ whose small text needs the extra passes.
 
 ## License
 
-`paperless-macos-ocr` is available under the [MIT License](LICENSE).
+`paperless-vision-ocr` is available under the [MIT License](LICENSE).

@@ -1,3 +1,3 @@
-module github.com/beanieboi/paperless-mac-ocr
+module github.com/beanieboi/paperless-vision-ocr
 
 go 1.27

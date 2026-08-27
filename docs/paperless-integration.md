@@ -4,7 +4,7 @@
 
 This flow was executed successfully on 2026-08-25 with:
 
-- native `paperless-macos-ocr` built with Go 1.26.2;
+- native `paperless-vision-ocr` built with Go 1.26.2;
 - native `mac-ocr` 1.1.1 on macOS 26.6.2;
 - official `paperlessngx/paperless-ngx:3.0.5` Docker image, digest
   `sha256:65a4cabf0169ea7fbd90ab7bb28ba3f8b5909613635acda1a03ad606f34b456b`;
@@ -44,7 +44,7 @@ HOST=0.0.0.0 \
 PORT=8080 \
 OCR_API_KEY=dummy \
 MAC_OCR_PATH="$HOME/.local/bin/mac-ocr" \
-./paperless-macos-ocr
+./paperless-vision-ocr
 ```
 
 Add these variables to the Paperless webserver/worker environment (in the

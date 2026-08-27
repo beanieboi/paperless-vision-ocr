@@ -1,7 +1,7 @@
 # Paperless-ngx / Azure Document Intelligence protocol
 
 This document records the deliberately small compatibility surface implemented by
-`paperless-macos-ocr`. It was researched on 2026-08-25 from:
+`paperless-vision-ocr`. It was researched on 2026-08-25 from:
 
 - Paperless-ngx pull request [#10320](https://github.com/paperless-ngx/paperless-ngx/pull/10320).
 - released Paperless-ngx **v3.0.5**, tag commit

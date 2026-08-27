@@ -8,10 +8,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/beanieboi/paperless-mac-ocr/internal/api"
-	"github.com/beanieboi/paperless-mac-ocr/internal/jobs"
-	"github.com/beanieboi/paperless-mac-ocr/internal/ocr"
-	"github.com/beanieboi/paperless-mac-ocr/internal/worker"
+	"github.com/beanieboi/paperless-vision-ocr/internal/api"
+	"github.com/beanieboi/paperless-vision-ocr/internal/jobs"
+	"github.com/beanieboi/paperless-vision-ocr/internal/ocr"
+	"github.com/beanieboi/paperless-vision-ocr/internal/worker"
 )
 
 type fakeRunner struct{}
@@ -29,7 +29,7 @@ func (*fakeRunner) Process(_ context.Context, request ocr.Request) (ocr.Result, 
 }
 
 func main() {
-	work, err := os.MkdirTemp("", "paperless-macos-ocr-compat-*")
+	work, err := os.MkdirTemp("", "paperless-vision-ocr-compat-*")
 	if err != nil {
 		panic(err)
 	}
