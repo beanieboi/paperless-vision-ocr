@@ -83,7 +83,8 @@ destination directory. `make install-mac-ocr` is an equivalent convenience
 target.
 
 The server fails fast with a clear message if `mac-ocr` is missing, cannot run,
-or does not support a configured language. The default listener is
+lacks the pinned same-pass transcript feature, or does not support a configured
+language. The default listener is
 `0.0.0.0:8080`; use `HOST=127.0.0.1` if Paperless runs on the same Mac.
 
 ## Paperless configuration

@@ -156,6 +156,27 @@ crossing either page boundary, and all 226 normalized tokens in Paperless's
 indexed OCR content matched the archive's embedded tokens in the same order.
 Raster comparisons found zero differing pixels on both pages.
 
+The current production deployment uses adapter commit `b9f71fd`, mac-ocr
+`1.1.1-paperless.3`, and `OCR_STRATEGY=auto`. The arm64 adapter SHA-256 is
+`636841c15218ee248de3de44beab8cbd47f394470f2b48c3a1908cf9a768506b`;
+the universal mac-ocr SHA-256 is
+`145bafb7bb2e19fc55ae12b70ef1f7d6c43b34b1489ef8ad5a60f229010e9d03`.
+Both `/health` and `/ready` pass. A production Azure-compatible run of the
+eight-page 36,504,500-byte regression input completed in 54,759 ms of OCR time,
+returned 14,827 characters, and produced a 36,553,217-byte searchable PDF.
+The previously omitted legal clauses were present. Poppler extracted 2,003 of
+2,032 normalized analyze-result tokens from the PDF layer (98.6%). The output
+page-one raster was byte-identical to the input raster.
+
+Paperless document 1208 was then reprocessed through the unmodified production
+Paperless 3.0.5 worker. The official Azure SDK polled the operation, downloaded
+the 36,553,217-byte PDF, and completed the Paperless task in 49.61 seconds. The
+stored archive checksum
+`6aa39fae8ccb085692a2b1841e0d853657274d42da36c27f63732cb5652f7790`
+matches the adapter job output exactly. Paperless stored all 14,827 transcript
+characters, the three previously missing clauses are present in document
+content, and the search backend returns document 1208 for `vorbezeichneten`.
+
 ### Paperless-ngx Docker
 
 An isolated Paperless-ngx 3.0.5 deployment with Redis 8 submitted the same
