@@ -1,6 +1,6 @@
 # Status
 
-Status date: **2026-08-25**
+Status date: **2026-08-27**
 
 ## Summary
 
@@ -123,6 +123,21 @@ again succeeded. It produced a 38,105-byte searchable PDF whose two fixture
 lines were extracted correctly; the service recorded 7 ms queue time and
 1,578 ms OCR time. The deployed universal binary has SHA-256
 `0ad042d00f0567b3da313a9a98063b2173c95543f721d477fcab84b761709b14`.
+
+After the project rename, the production Mac mini was redeployed from adapter
+commit `de46b22` under the LaunchAgent label `com.paperless-vision-ocr`. The
+binary, cache directory, plist, and log paths all use the
+`paperless-vision-ocr` name; the previous cache and diagnostic artifacts were
+preserved under renamed paths. The old launchd identity and old-named artifact
+filenames are absent. The deployed arm64 adapter binary has SHA-256
+`9436213c14ff4c765b9f925d70609de94a734c76a933534166bdc5442581a970`
+and uses `mac-ocr 1.1.1-paperless.2`.
+
+A full POST/poll/PDF production smoke test after that rename returned the two
+expected fixture lines and a 38,105-byte `application/pdf` result. Its SHA-256
+was `2ee2d1252e0bdcd28d740fc5502862c53f5809272fca7a68b40a18a82b90c7f2`,
+and `pdftotext` extracted both lines. The service recorded 7 ms queue time and
+1,646 ms OCR time; `/health` and `/ready` both passed.
 
 A subsequent physical scanner run completed the full production path into
 Paperless document 1112. The downloaded 9,636,625-byte original was image-only;
