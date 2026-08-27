@@ -17,9 +17,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ben/paperless-macos-ocr/internal/azure"
-	"github.com/ben/paperless-macos-ocr/internal/jobs"
-	"github.com/ben/paperless-macos-ocr/internal/ocr"
+	"github.com/beanieboi/paperless-mac-ocr/internal/azure"
+	"github.com/beanieboi/paperless-mac-ocr/internal/jobs"
+	"github.com/beanieboi/paperless-mac-ocr/internal/ocr"
 )
 
 type fakeSubmitter struct {

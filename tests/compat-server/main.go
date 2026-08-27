@@ -8,10 +8,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/ben/paperless-macos-ocr/internal/api"
-	"github.com/ben/paperless-macos-ocr/internal/jobs"
-	"github.com/ben/paperless-macos-ocr/internal/ocr"
-	"github.com/ben/paperless-macos-ocr/internal/worker"
+	"github.com/beanieboi/paperless-mac-ocr/internal/api"
+	"github.com/beanieboi/paperless-mac-ocr/internal/jobs"
+	"github.com/beanieboi/paperless-mac-ocr/internal/ocr"
+	"github.com/beanieboi/paperless-mac-ocr/internal/worker"
 )
 
 type fakeRunner struct{}

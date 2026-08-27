@@ -4,6 +4,10 @@
 Vision for remote OCR. It impersonates only the three Azure Document
 Intelligence endpoints Paperless actually calls.
 
+This repository contains only the standalone OCR service. It does not modify
+Paperless documents directly and does not include bulk reprocessing or library
+migration tooling.
+
 ```text
 Paperless-ngx
    ↓
@@ -37,6 +41,13 @@ See [STATUS.md](STATUS.md) for the recorded end-to-end result and
 [docs/protocol.md](docs/protocol.md) for the exact HTTP contract.
 
 ## Install
+
+Clone the repository:
+
+```sh
+git clone https://github.com/beanieboi/paperless-mac-ocr.git
+cd paperless-mac-ocr
+```
 
 Install the patched `mac-ocr` 1.1.1 universal binary:
 
@@ -237,3 +248,7 @@ The default OCR strategy is `standard`. Upstream 1.1.1's `auto` strategy may
 retain a few partial partition observations alongside the full-page pass on
 dense scans. `auto` and `partitioned` remain available explicitly for documents
 whose small text needs the extra passes.
+
+## License
+
+`paperless-macos-ocr` is available under the [MIT License](LICENSE).

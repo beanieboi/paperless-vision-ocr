@@ -11,8 +11,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/ben/paperless-macos-ocr/internal/jobs"
-	"github.com/ben/paperless-macos-ocr/internal/ocr"
+	"github.com/beanieboi/paperless-mac-ocr/internal/jobs"
+	"github.com/beanieboi/paperless-mac-ocr/internal/ocr"
 )
 
 var jobDirectoryPattern = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$`)

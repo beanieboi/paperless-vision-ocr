@@ -1,3 +1,3 @@
-module github.com/ben/paperless-macos-ocr
+module github.com/beanieboi/paperless-mac-ocr
 
 go 1.27
