@@ -15,16 +15,23 @@ func TestMacOCRIntegration(t *testing.T) {
 	if runtime.GOOS != "darwin" {
 		t.Skip("Apple Vision requires macOS")
 	}
-	path, err := exec.LookPath("mac-ocr")
-	if err != nil {
-		t.Skip("mac-ocr is not installed")
+	path := os.Getenv("MAC_OCR_PATH")
+	if path == "" {
+		var err error
+		path, err = exec.LookPath("mac-ocr")
+		if err != nil {
+			t.Skip("mac-ocr is not installed")
+		}
 	}
 	fixture := filepath.Join("..", "..", "testdata", "rechnung-image-only.pdf")
 	if _, err := os.Stat(fixture); err != nil {
 		t.Skip("OCR fixture is not present")
 	}
 	output := filepath.Join(t.TempDir(), "output.pdf")
-	runner := &MacRunner{Path: path, Languages: []string{"de-DE", "en-US"}, Strategy: "standard", Timeout: 5 * time.Minute}
+	runner := &MacRunner{Path: path, Languages: []string{"de-DE", "en-US"}, Strategy: "auto", Timeout: 5 * time.Minute}
+	if err := runner.Ready(context.Background()); err != nil {
+		t.Skipf("installed mac-ocr is not compatible: %v", err)
+	}
 	result, err := runner.Process(context.Background(), Request{InputPath: fixture, OutputPath: output})
 	if err != nil {
 		t.Fatal(err)

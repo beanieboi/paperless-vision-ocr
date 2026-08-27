@@ -32,8 +32,8 @@ needed.
 
 - macOS 26.6.2 (build 25G83, Apple silicon)
 - Go 1.27.0
-- `mac-ocr` `1.1.1-paperless.2`, fork commit
-  [`516fdd0`](https://github.com/beanieboi/mac-ocr/commit/516fdd0f30f09084b9616156463228f9972d8618)
+- `mac-ocr` `1.1.1-paperless.3`, fork commit
+  [`243c8ef`](https://github.com/beanieboi/mac-ocr/commit/243c8efb4dfc8061e5b9e368ae328810c8cc7872)
 - Paperless-ngx 3.0.5
 - `azure-ai-documentintelligence` 1.0.2 with `azure-core` 1.38.0
 
@@ -56,7 +56,7 @@ Install the patched `mac-ocr` 1.1.1 universal binary:
 ```
 
 The installer fetches only fork commit
-`516fdd0f30f09084b9616156463228f9972d8618`, verifies the checkout resolved to
+`243c8efb4dfc8061e5b9e368ae328810c8cc7872`, verifies the checkout resolved to
 that exact commit, and compiles a universal binary to
 `$HOME/.local/bin/mac-ocr`. It requires Git and the Swift toolchain from Xcode or
 Xcode Command Line Tools, but no Node or npm. The fork writes each recognized
@@ -123,10 +123,10 @@ All configuration uses environment variables.
 | `HOST` | `0.0.0.0` | Listen address |
 | `PORT` | `8080` | Listen port |
 | `OCR_LANGUAGES` | `de-DE,en-US` | Comma-separated BCP-47 hints |
-| `OCR_STRATEGY` | `standard` | `standard` is reliable for ordinary scans; `auto` and `partitioned` are opt-in |
+| `OCR_STRATEGY` | `auto` | Full-page OCR normally; adds partitioned passes when a large page contains small or missing text |
 | `OCR_MAX_CONCURRENT_JOBS` | `1` | Bounded Apple Vision workers |
 | `OCR_MAX_QUEUED_JOBS` | `20` | Pending-job capacity |
-| `OCR_TIMEOUT_MINUTES` | `30` | Total timeout for both `mac-ocr` passes |
+| `OCR_TIMEOUT_MINUTES` | `30` | Total timeout for PDF generation and any born-digital fallback pass |
 | `OCR_JOB_TTL_HOURS` | `24` | Result and file retention |
 | `OCR_WORK_DIR` | OS temp dir + `paperless-vision-ocr` | Per-job storage |
 | `OCR_API_KEY` | empty | Optional subscription key requirement |
@@ -238,16 +238,17 @@ to `~/Library/LaunchAgents/`, validate with `plutil -lint`, and load it with
 
 ## Design limits
 
-`mac-ocr` currently needs two CLI invocations: JSONL OCR for
-`analyzeResult.content`, then `searchable-pdf` for the positioned invisible text
-layer. This duplicates recognition work but preserves a stable native CLI
-boundary. The PDF pass intentionally does not use `--ocr-all-pages`, so its
-default page-level existing-text detection remains active.
+The pinned `mac-ocr` build emits a JSONL transcript from the same recognition
+pass that creates the searchable PDF, so image-only scans require one CLI
+invocation. If a mixed or born-digital PDF contains pages that `mac-ocr` skips,
+the adapter runs the ordinary JSONL command once and uses its text only for
+those skipped pages. The PDF pass intentionally does not use `--ocr-all-pages`,
+so its page-level existing-text detection remains active.
 
-The default OCR strategy is `standard`. Upstream 1.1.1's `auto` strategy may
-retain a few partial partition observations alongside the full-page pass on
-dense scans. `auto` and `partitioned` remain available explicitly for documents
-whose small text needs the extra passes.
+The default OCR strategy is `auto`. It stays on full-page OCR for ordinary
+scans and adds partitioned recognition for large pages with small or missing
+text. The pinned fork performs page-wide geometric deduplication so complete
+partition lines replace all overlapping fragments.
 
 ## License
 

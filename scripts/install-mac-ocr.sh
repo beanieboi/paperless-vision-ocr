@@ -2,9 +2,9 @@
 
 set -eu
 
-patched_version="1.1.1-paperless.2"
+patched_version="1.1.1-paperless.3"
 repository_url="https://github.com/beanieboi/mac-ocr.git"
-repository_commit="516fdd0f30f09084b9616156463228f9972d8618"
+repository_commit="243c8efb4dfc8061e5b9e368ae328810c8cc7872"
 install_dir="${MAC_OCR_INSTALL_DIR:-${HOME}/.local/bin}"
 temporary_dir="$(mktemp -d "${TMPDIR:-/tmp}/paperless-vision-ocr.XXXXXX")"
 

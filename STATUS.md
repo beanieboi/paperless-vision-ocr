@@ -28,8 +28,8 @@ Paperless was not patched and no Azure endpoint was contacted.
   `sha256:65a4cabf0169ea7fbd90ab7bb28ba3f8b5909613635acda1a03ad606f34b456b`
 - Azure SDK: `azure-ai-documentintelligence==1.0.2`
 - Azure Core: `azure-core==1.38.0` (Paperless v3.0.5 lockfile resolution)
-- `mac-ocr`: **1.1.1-paperless.2**, universal Mach-O built from pinned
-  `beanieboi/mac-ocr` commit `516fdd0f30f09084b9616156463228f9972d8618`
+- `mac-ocr`: **1.1.1-paperless.3**, universal Mach-O built from pinned
+  `beanieboi/mac-ocr` commit `243c8efb4dfc8061e5b9e368ae328810c8cc7872`
 - Go: **go1.27.0 darwin/arm64**
 - macOS: **26.6.2**, build **25G83**, Apple silicon
 - Poppler `pdftotext`: present and used for text-layer validation
@@ -46,8 +46,10 @@ Paperless was not patched and no Azure endpoint was contacted.
 - Asynchronous `notStarted`, `running`, `succeeded`, and `failed` job states.
 - Bounded queue and bounded Apple Vision worker concurrency.
 - Direct, context-aware `mac-ocr` execution without a shell.
-- Real `mac-ocr` JSONL parsing and searchable-PDF generation with repeatable
-  `-l` flags and `--ocr-strategy`.
+- Searchable-PDF generation and same-pass JSONL transcript parsing with
+  repeatable `-l` flags and `--ocr-strategy`.
+- Page-wide partition deduplication: complete lines supersede every overlapping
+  full-page fragment, including near-identical readings with minor OCR changes.
 - Explicit whitespace in searchable PDFs: the pinned patch writes one invisible
   text run per Vision line instead of separator-free per-word runs.
 - Long invisible lines are fitted to their Vision bounding boxes so selectable
@@ -81,10 +83,18 @@ change. The subsequent width-fitting regression and the searchable-PDF suite
 pass on `1.1.1-paperless.2`. The installer fetches and verifies the pinned fork
 commit and builds an arm64/x86_64 universal binary.
 
-The adapter now defaults to `OCR_STRATEGY=standard`. Upstream `auto` accepted 11
-extra partition observations on the affected scan, including partial overlaps;
-operators can still opt into `auto` or `partitioned` for difficult small text.
+The adapter now defaults to `OCR_STRATEGY=auto`. Fork version
+`1.1.1-paperless.3` replaces the first-match partition merge that retained
+partial overlaps with page-wide geometric deduplication. Ordinary scans stay on
+the full-page path; eligible high-resolution pages receive partition passes.
 See [docs/mac-ocr-patch.md](docs/mac-ocr-patch.md).
+
+On the eight-page 600-DPI regression document (Paperless ID 1208), corrected
+partitioning reduced page-one accepted observations from 134 to 102 and added
+46 distinct recognized words over the prior standard output, including complete
+legal clauses that full-page Vision omitted. The production PDF page raster was
+byte-identical to the source page raster. The same-pass transcript contained
+15,101 characters across eight page records.
 
 ## Compatibility results
 
@@ -179,8 +189,10 @@ database storage.
 - The adapter does not independently count PDF pages or deeply validate PDF
   structure before invoking `mac-ocr`; malformed/zero-page documents become
   failed asynchronous operations after the cheap signature check.
-- `mac-ocr` is run twice: once for streaming JSONL text and once for the
-  searchable PDF. This is correct but duplicates Vision recognition work.
+- Image-only scans use one `mac-ocr` process and one recognition pipeline for
+  both `AnalyzeResult.content` and the searchable PDF. Mixed or born-digital
+  PDFs require one fallback JSONL pass for pages deliberately skipped by the
+  searchable-PDF command.
 - OCR text remains in in-memory job state until expiry because Paperless needs it
   in `AnalyzeResult.content`. Document text is never written to service logs.
 - There are no Prometheus metrics; timings and sizes are available as structured
@@ -222,20 +234,18 @@ The real `TestMacOCRIntegration` also passed with `mac-ocr` on `PATH`; it was no
 skipped. Normal tests pass without `mac-ocr` and skip only that native integration
 test when the executable is unavailable.
 
-The fork's focused searchable-PDF suite passes on commit `516fdd0`, including
-the explicit-spacing and line-width regressions. Two attempts to rerun all fork
+The fork's focused searchable-PDF, CLI, transcript, and partition-deduplication
+suites pass on commit `243c8ef`, including the explicit-spacing and line-width
+regressions. One attempt to rerun all fork
 tests under Xcode 17F113 stalled in the pre-existing `TestSupport.run` pipe wait
-(`CustomWordsTests` once and `PDFDPITests` once); each implicated suite passes
-when isolated, and neither exercises the changed line-fitting function. This is
-a test-harness deadlock, not a recorded product-test failure.
+after compilation; the affected suites pass when isolated. This is a
+test-harness deadlock, not a recorded product-test failure.
 
 ## Remaining TODOs
 
-1. Use a future supported `mac-ocr` API that emits OCR text and a searchable PDF
-   from one recognition pass, if such a stable CLI contract becomes available.
-2. Add optional persistent job metadata only if restart-surviving result URLs are
+1. Add optional persistent job metadata only if restart-surviving result URLs are
    operationally required.
-3. Re-check the three-route contract when Paperless changes its Azure SDK pin or
+2. Re-check the three-route contract when Paperless changes its Azure SDK pin or
    API version.
 
 ## Protocol assumptions
@@ -245,9 +255,8 @@ a test-harness deadlock, not a recorded product-test failure.
 - The configured Paperless endpoint is an origin without the SDK-owned
   `/documentintelligence` suffix.
 - Paperless reads only `AnalyzeResult.content` and the generated PDF byte stream.
-- Pinned fork commit `516fdd0` retains the CLI options and JSONL `text` field
-  used by the service; its relevant behavior change is searchable-PDF
-  text-layer serialization.
+- Pinned fork commit `243c8ef` retains `--transcript-output` and its per-page
+  `page`, `pageCount`, `text`, and `skipped` JSON fields.
 
 The full route and schema evidence is in [docs/protocol.md](docs/protocol.md), and
 the reproducible Paperless procedure is in

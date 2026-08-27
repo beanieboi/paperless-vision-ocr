@@ -72,10 +72,31 @@ furthest ended at 570.64 points. The affected page remained pixel-identical.
 The focused spacing and width-fitting regression tests passed against the new
 commit.
 
-`OCR_STRATEGY=standard` is now the adapter default. On this scan, upstream
-`auto` accepted 11 partition observations in addition to the full-page pass;
-some were partial overlaps. `auto` and `partitioned` remain available for
-difficult small-text documents, but they are no longer the safe default.
+A third issue appeared on an eight-page 600-DPI scan. Full-page Vision OCR
+omitted complete clauses that were recognized in tighter partitions, but the
+incremental merge stopped after the first duplicate. A complete partition line
+could therefore coexist with several full-page fragments, and slightly
+different readings of the same physical line were not considered duplicates.
+
+Fork commit
+[`243c8ef`](https://github.com/beanieboi/mac-ocr/commit/243c8efb4dfc8061e5b9e368ae328810c8cc7872)
+replaces that first-match merge with page-wide geometric components. A complete
+line supersedes every overlapping fragment, while adjacent lines and separate
+columns remain independent. It also adds `--transcript-output`, which exposes
+the exact per-page text used for the searchable layer without a second Vision
+run, and stamps the fork as `1.1.1-paperless.3`.
+
+On the affected scan, page-one accepted observations fell from 134 to 102 after
+deduplication. Across all eight pages the searchable result added 46 distinct
+recognized words over the previous standard pass, including the omitted legal
+clauses. The non-debug output rasterized pixel-for-pixel identically to the
+source page. The partition and CLI regression suites pass, including checks
+that one complete line removes three overlapping fragments and that nearby
+independent lines survive.
+
+`OCR_STRATEGY=auto` is again the adapter default. Ordinary pages stay on the
+full-page path; large pages with small text receive the corrected partitioned
+pass.
 
 ## Rebuild
 
