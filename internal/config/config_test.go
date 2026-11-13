@@ -27,6 +27,9 @@ func TestDefaults(t *testing.T) {
 	if cfg.OCRTimeout != 30*time.Minute || cfg.JobTTL != 24*time.Hour || cfg.MaxUploadBytes != 100*1024*1024 {
 		t.Fatalf("unexpected limits: %#v", cfg)
 	}
+	if cfg.StallTimeout != 2*time.Minute || cfg.MacOCRPath != DefaultMacOCRPath {
+		t.Fatalf("stall timeout = %v, mac-ocr path = %q", cfg.StallTimeout, cfg.MacOCRPath)
+	}
 	if cfg.LogLevel != slog.LevelInfo {
 		t.Fatalf("log level = %v", cfg.LogLevel)
 	}
@@ -37,12 +40,12 @@ func TestEnvironmentParsing(t *testing.T) {
 		"HOST": "127.0.0.1", "PORT": "9000", "OCR_LANGUAGES": " en-US, de-DE,en-us ",
 		"OCR_STRATEGY": "partitioned", "OCR_MAX_CONCURRENT_JOBS": "3", "OCR_MAX_QUEUED_JOBS": "7",
 		"OCR_TIMEOUT_MINUTES": "9", "OCR_JOB_TTL_HOURS": "4", "OCR_WORK_DIR": "/tmp/custom",
-		"OCR_MAX_UPLOAD_MB": "12", "MAC_OCR_PATH": "/bin/mac-ocr", "LOG_LEVEL": "debug",
+		"OCR_MAX_UPLOAD_MB": "12", "MAC_OCR_PATH": "/bin/mac-ocr", "LOG_LEVEL": "debug", "OCR_STALL_TIMEOUT_SECONDS": "0",
 	}))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(cfg.Languages) != 2 || cfg.MaxUploadBytes != 12*1024*1024 || cfg.LogLevel != slog.LevelDebug {
+	if len(cfg.Languages) != 2 || cfg.MaxUploadBytes != 12*1024*1024 || cfg.LogLevel != slog.LevelDebug || cfg.StallTimeout != 0 {
 		t.Fatalf("unexpected config: %#v", cfg)
 	}
 }
@@ -53,6 +56,7 @@ func TestInvalidValues(t *testing.T) {
 		{"OCR_MAX_CONCURRENT_JOBS": "0"}, {"OCR_MAX_QUEUED_JOBS": "0"},
 		{"OCR_TIMEOUT_MINUTES": "no"}, {"OCR_JOB_TTL_HOURS": "0"}, {"OCR_MAX_UPLOAD_MB": "0"},
 		{"OCR_WORK_DIR": "relative"}, {"LOG_LEVEL": "TRACE"},
+		{"OCR_STALL_TIMEOUT_SECONDS": "5"}, {"OCR_STALL_TIMEOUT_SECONDS": "-1"},
 	}
 	for _, values := range tests {
 		if _, err := load(env(values)); err == nil {

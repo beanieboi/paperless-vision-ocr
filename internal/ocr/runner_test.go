@@ -2,7 +2,10 @@ package ocr
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -122,6 +125,55 @@ func TestMacRunnerFallsBackOnlyForSkippedPages(t *testing.T) {
 	}
 }
 
+func TestMacRunnerKillsStalledProcess(t *testing.T) {
+	runner, _, inputPath, outputPath := fakeMacRunner(t, "", "")
+	t.Setenv("FAKE_MAC_OCR_HANG", "1")
+	runner.StallTimeout = 200 * time.Millisecond
+	runner.stallInterval = 20 * time.Millisecond
+	runner.cpuTime = func(int) (string, error) { return "0:00.10", nil }
+
+	started := time.Now()
+	_, err := runner.Process(context.Background(), Request{InputPath: inputPath, OutputPath: outputPath})
+	processErr, ok := errors.AsType[*ProcessError](err)
+	if !ok || processErr.Code != "OCROperationStalled" || !processErr.Stalled || processErr.Timeout {
+		t.Fatalf("err = %#v", err)
+	}
+	if elapsed := time.Since(started); elapsed > 3*time.Second {
+		t.Fatalf("stall detection took %v", elapsed)
+	}
+}
+
+func TestMacRunnerKeepsProcessWithAdvancingCPUTime(t *testing.T) {
+	runner, _, inputPath, outputPath := fakeMacRunner(t,
+		`{"page":1,"pageCount":1,"text":"slow but busy","skipped":false}`, "")
+	t.Setenv("FAKE_MAC_OCR_DELAY", "0.5")
+	runner.StallTimeout = 100 * time.Millisecond
+	runner.stallInterval = 10 * time.Millisecond
+	var ticks int
+	runner.cpuTime = func(int) (string, error) { ticks++; return fmt.Sprint(ticks), nil }
+
+	result, err := runner.Process(context.Background(), Request{InputPath: inputPath, OutputPath: outputPath})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.Text != "slow but busy" {
+		t.Fatalf("text = %q", result.Text)
+	}
+}
+
+func TestProcessCPUTime(t *testing.T) {
+	if _, err := os.Stat("/bin/ps"); err != nil {
+		t.Skip("/bin/ps not available")
+	}
+	if err := exec.Command("/bin/ps", "-p", "1").Run(); err != nil {
+		t.Skipf("/bin/ps is not usable here (e.g. Nix build sandbox): %v", err)
+	}
+	value, err := processCPUTime(os.Getpid())
+	if err != nil || value == "" {
+		t.Fatalf("value = %q, err = %v", value, err)
+	}
+}
+
 func fakeMacRunner(t *testing.T, transcript, fallback string) (*MacRunner, string, string, string) {
 	t.Helper()
 	directory := t.TempDir()
@@ -132,6 +184,12 @@ func fakeMacRunner(t *testing.T, transcript, fallback string) (*MacRunner, strin
 	script := `#!/bin/sh
 set -eu
 printf '%s\n' "$*" >> "$FAKE_MAC_OCR_LOG"
+if [ -n "${FAKE_MAC_OCR_HANG:-}" ]; then
+  exec sleep 30
+fi
+if [ -n "${FAKE_MAC_OCR_DELAY:-}" ]; then
+  sleep "$FAKE_MAC_OCR_DELAY"
+fi
 if [ "$1" = "searchable-pdf" ]; then
   output=""
   transcript=""

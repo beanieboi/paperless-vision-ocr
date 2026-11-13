@@ -2,9 +2,15 @@
 
 set -eu
 
-patched_version="1.1.1-paperless.3"
+# The pin and expected version live in the Nix files; read them from there.
+repository_root="$(cd "$(dirname "$0")/.." && pwd)"
 repository_url="https://github.com/beanieboi/mac-ocr.git"
-repository_commit="243c8efb4dfc8061e5b9e368ae328810c8cc7872"
+repository_commit="$(sed -n 's|.*"github:beanieboi/mac-ocr/\([0-9a-f]\{40\}\)".*|\1|p' "${repository_root}/flake.nix")"
+patched_version="$(sed -n 's|^  version = "\(.*\)";$|\1|p' "${repository_root}/nix/mac-ocr.nix")"
+if [ -z "${repository_commit}" ] || [ -z "${patched_version}" ]; then
+	echo "could not read the mac-ocr pin from flake.nix and nix/mac-ocr.nix" >&2
+	exit 1
+fi
 install_dir="${MAC_OCR_INSTALL_DIR:-${HOME}/.local/bin}"
 temporary_dir="$(mktemp -d "${TMPDIR:-/tmp}/paperless-vision-ocr.XXXXXX")"
 

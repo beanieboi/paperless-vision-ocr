@@ -28,7 +28,7 @@ func TestMacOCRIntegration(t *testing.T) {
 		t.Skip("OCR fixture is not present")
 	}
 	output := filepath.Join(t.TempDir(), "output.pdf")
-	runner := &MacRunner{Path: path, Languages: []string{"de-DE", "en-US"}, Strategy: "auto", Timeout: 5 * time.Minute}
+	runner := &MacRunner{Path: path, Languages: []string{"de-DE", "en-US"}, Strategy: "auto", Timeout: 5 * time.Minute, StallTimeout: 2 * time.Minute}
 	if err := runner.Ready(context.Background()); err != nil {
 		t.Skipf("installed mac-ocr is not compatible: %v", err)
 	}

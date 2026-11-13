@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -31,6 +32,7 @@ type ProcessError struct {
 	Diagnostic string
 	ExitCode   int
 	Timeout    bool
+	Stalled    bool
 	Err        error
 }
 
@@ -52,7 +54,19 @@ type MacRunner struct {
 	Languages []string
 	Strategy  string
 	Timeout   time.Duration
+	// StallTimeout kills mac-ocr once its CPU time has not advanced for this
+	// long. Vision occasionally never returns after the Neural Engine finished,
+	// leaving the process idle until Timeout. Zero disables the check.
+	StallTimeout time.Duration
+
+	stallInterval time.Duration
+	cpuTime       func(pid int) (string, error)
 }
+
+var errStalled = errors.New("mac-ocr CPU time stopped advancing")
+
+// waitDelay bounds how long Wait blocks on output pipes after mac-ocr is killed.
+const waitDelay = 10 * time.Second
 
 func (r *MacRunner) executable() (string, error) {
 	if strings.ContainsRune(r.Path, filepath.Separator) {
@@ -138,8 +152,10 @@ func (r *MacRunner) Process(ctx context.Context, request Request) (Result, error
 	if err != nil {
 		return Result{}, &ProcessError{Code: "ExecutableNotFound", ExitCode: -1, Err: err}
 	}
-	runCtx, cancel := context.WithTimeout(ctx, r.Timeout)
-	defer cancel()
+	timeoutCtx, cancelTimeout := context.WithTimeout(ctx, r.Timeout)
+	defer cancelTimeout()
+	runCtx, cancel := context.WithCancelCause(timeoutCtx)
+	defer cancel(nil)
 
 	transcriptPath := filepath.Join(filepath.Dir(request.OutputPath), "transcript.jsonl")
 	_ = os.Remove(transcriptPath)
@@ -154,7 +170,14 @@ func (r *MacRunner) Process(ctx context.Context, request Request) (Result, error
 	cmd := exec.CommandContext(runCtx, path, pdfArgs...)
 	cmd.Stdout = io.Discard
 	cmd.Stderr = &pdfStderr
-	if err := cmd.Run(); err != nil {
+	cmd.WaitDelay = waitDelay
+	if err := cmd.Start(); err != nil {
+		return Result{Duration: time.Since(started), ExitCode: exitCode(err)}, processError(runCtx, "SearchablePDFFailed", err, pdfStderr.String())
+	}
+	stopWatch := r.watchStall(runCtx, cancel, cmd.Process.Pid)
+	err = cmd.Wait()
+	stopWatch()
+	if err != nil {
 		return Result{Duration: time.Since(started), ExitCode: exitCode(err)}, processError(runCtx, "SearchablePDFFailed", err, pdfStderr.String())
 	}
 	transcriptFile, err := os.Open(transcriptPath)
@@ -171,7 +194,7 @@ func (r *MacRunner) Process(ctx context.Context, request Request) (Result, error
 	}
 
 	if transcript.hasSkippedPages() {
-		fallbackPages, fallbackErr := r.recognizeText(runCtx, path, request.InputPath)
+		fallbackPages, fallbackErr := r.recognizeText(runCtx, cancel, path, request.InputPath)
 		if fallbackErr != nil {
 			return Result{Duration: time.Since(started), ExitCode: processExitCode(fallbackErr)}, fallbackErr
 		}
@@ -200,7 +223,7 @@ func (r *MacRunner) Process(ctx context.Context, request Request) (Result, error
 	return Result{Text: text, Duration: time.Since(started), OutputBytes: info.Size(), ExitCode: 0}, nil
 }
 
-func (r *MacRunner) recognizeText(ctx context.Context, path, inputPath string) ([]string, error) {
+func (r *MacRunner) recognizeText(ctx context.Context, cancel context.CancelCauseFunc, path, inputPath string) ([]string, error) {
 	textArgs := []string{inputPath, "--format", "jsonl"}
 	textArgs = appendLanguages(textArgs, r.Languages)
 	var textStderr limitedBuffer
@@ -210,14 +233,17 @@ func (r *MacRunner) recognizeText(ctx context.Context, path, inputPath string) (
 		return nil, &ProcessError{Code: "OCRTextFailed", ExitCode: -1, Err: err}
 	}
 	cmd.Stderr = &textStderr
+	cmd.WaitDelay = waitDelay
 	if err := cmd.Start(); err != nil {
 		return nil, processError(ctx, "OCRTextFailed", err, textStderr.String())
 	}
+	stopWatch := r.watchStall(ctx, cancel, cmd.Process.Pid)
 	pages, parseErr := parseTextPagesJSONL(stdout)
 	if parseErr != nil && cmd.Process != nil {
 		_ = cmd.Process.Kill()
 	}
 	waitErr := cmd.Wait()
+	stopWatch()
 	if waitErr != nil {
 		return nil, processError(ctx, "OCRTextFailed", waitErr, textStderr.String())
 	}
@@ -225,6 +251,67 @@ func (r *MacRunner) recognizeText(ctx context.Context, path, inputPath string) (
 		return nil, &ProcessError{Code: "InvalidOCROutput", ExitCode: 0, Err: fmt.Errorf("parse mac-ocr JSONL: %w", parseErr)}
 	}
 	return pages, nil
+}
+
+// watchStall samples the CPU time of pid and cancels ctx with errStalled once
+// it has not changed for StallTimeout. The returned function stops the watch.
+func (r *MacRunner) watchStall(ctx context.Context, cancel context.CancelCauseFunc, pid int) func() {
+	if r.StallTimeout <= 0 {
+		return func() {}
+	}
+	interval := r.stallInterval
+	if interval <= 0 {
+		interval = min(r.StallTimeout/4, 15*time.Second)
+	}
+	sample := r.cpuTime
+	if sample == nil {
+		sample = processCPUTime
+	}
+	done := make(chan struct{})
+	var wg sync.WaitGroup
+	wg.Go(func() {
+		ticker := time.NewTicker(interval)
+		defer ticker.Stop()
+		last, lastErr := sample(pid)
+		since := time.Now()
+		for {
+			select {
+			case <-done:
+				return
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+			}
+			current, err := sample(pid)
+			// A failed sample (e.g. the process just exited) never counts as a stall.
+			if err != nil || lastErr != nil || current != last {
+				last, lastErr, since = current, err, time.Now()
+				continue
+			}
+			if time.Since(since) >= r.StallTimeout {
+				cancel(errStalled)
+				return
+			}
+		}
+	})
+	return func() {
+		close(done)
+		wg.Wait()
+	}
+}
+
+// processCPUTime returns the accumulated user+system CPU time of pid as
+// reported by ps. Only equality between samples matters.
+func processCPUTime(pid int) (string, error) {
+	out, err := exec.Command("/bin/ps", "-o", "time=", "-p", fmt.Sprint(pid)).Output()
+	if err != nil {
+		return "", err
+	}
+	value := strings.TrimSpace(string(out))
+	if value == "" {
+		return "", fmt.Errorf("no CPU time for pid %d", pid)
+	}
+	return value, nil
 }
 
 func appendLanguages(args []string, languages []string) []string {
@@ -332,6 +419,9 @@ func processExitCode(err error) int {
 }
 
 func processError(ctx context.Context, code string, err error, diagnostic string) *ProcessError {
+	if errors.Is(context.Cause(ctx), errStalled) {
+		return &ProcessError{Code: "OCROperationStalled", Diagnostic: diagnostic, ExitCode: exitCode(err), Stalled: true, Err: errStalled}
+	}
 	if errors.Is(ctx.Err(), context.DeadlineExceeded) {
 		return &ProcessError{Code: "OCROperationTimedOut", Diagnostic: diagnostic, ExitCode: exitCode(err), Timeout: true, Err: ctx.Err()}
 	}

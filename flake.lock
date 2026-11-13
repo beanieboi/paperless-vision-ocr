@@ -1,0 +1,45 @@
+{
+  "nodes": {
+    "mac-ocr": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1787827746,
+        "narHash": "sha256-G0pVoAQAsBI3pVzpzV12l7rZDjyRfDwziLDY9BoNxXg=",
+        "owner": "beanieboi",
+        "repo": "mac-ocr",
+        "rev": "243c8efb4dfc8061e5b9e368ae328810c8cc7872",
+        "type": "github"
+      },
+      "original": {
+        "owner": "beanieboi",
+        "repo": "mac-ocr",
+        "rev": "243c8efb4dfc8061e5b9e368ae328810c8cc7872",
+        "type": "github"
+      }
+    },
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1794158174,
+        "narHash": "sha256-IzmtpTUNYk6hfRlNwQKVxgJXHQSe1LltY+mrTUtVm8E=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "f6bf1059f02576e0b913c7b49d5e4eb6dda9cc22",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixpkgs-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "root": {
+      "inputs": {
+        "mac-ocr": "mac-ocr",
+        "nixpkgs": "nixpkgs"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}

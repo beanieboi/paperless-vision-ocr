@@ -40,7 +40,44 @@ needed.
 See [STATUS.md](STATUS.md) for the recorded end-to-end result and
 [docs/protocol.md](docs/protocol.md) for the exact HTTP contract.
 
-## Install
+## Install with Nix
+
+The flake builds the pinned `mac-ocr` fork and the service together; the
+service's default `MAC_OCR_PATH` points at that build.
+
+```sh
+nix build github:beanieboi/paperless-vision-ocr        # service
+nix build github:beanieboi/paperless-vision-ocr#mac-ocr # CLI only
+```
+
+On nix-darwin, the module runs it as a launchd daemon:
+
+```nix
+{
+  inputs.paperless-vision-ocr = {
+    url = "github:beanieboi/paperless-vision-ocr";
+    inputs.nixpkgs.follows = "nixpkgs";
+  };
+}
+```
+
+```nix
+{ inputs, ... }:
+{
+  imports = [ inputs.paperless-vision-ocr.darwinModules.default ];
+  services.paperless-vision-ocr = {
+    enable = true;
+    user = "alice";
+    languages = [ "de-DE" "en-US" ];
+  };
+}
+```
+
+See [nix/darwin-module.nix](nix/darwin-module.nix) for all options. The
+`mac-ocr` pin lives in `flake.nix`; the module's package exposes the matching
+CLI as `config.services.paperless-vision-ocr.package.mac-ocr`.
+
+## Install manually
 
 Clone the repository:
 
@@ -55,8 +92,7 @@ Install the patched `mac-ocr` 1.1.1 universal binary:
 ./scripts/install-mac-ocr.sh
 ```
 
-The installer fetches only fork commit
-`243c8efb4dfc8061e5b9e368ae328810c8cc7872`, verifies the checkout resolved to
+The installer fetches only the fork commit pinned in `flake.nix`, verifies the checkout resolved to
 that exact commit, and compiles a universal binary to
 `$HOME/.local/bin/mac-ocr`. It requires Git and the Swift toolchain from Xcode or
 Xcode Command Line Tools, but no Node or npm. The fork writes each recognized
@@ -128,11 +164,12 @@ All configuration uses environment variables.
 | `OCR_MAX_CONCURRENT_JOBS` | `1` | Bounded Apple Vision workers |
 | `OCR_MAX_QUEUED_JOBS` | `20` | Pending-job capacity |
 | `OCR_TIMEOUT_MINUTES` | `30` | Total timeout for PDF generation and any born-digital fallback pass |
+| `OCR_STALL_TIMEOUT_SECONDS` | `120` | Kill `mac-ocr` once its CPU time has not advanced for this long (Vision sometimes never returns); `0` disables, otherwise at least `10` |
 | `OCR_JOB_TTL_HOURS` | `24` | Result and file retention |
 | `OCR_WORK_DIR` | OS temp dir + `paperless-vision-ocr` | Per-job storage |
 | `OCR_API_KEY` | empty | Optional subscription key requirement |
 | `OCR_MAX_UPLOAD_MB` | `100` | Decoded PDF upload limit |
-| `MAC_OCR_PATH` | `mac-ocr` | Executable name or absolute path |
+| `MAC_OCR_PATH` | `mac-ocr` (Nix: the pinned build) | Executable name or absolute path |
 | `LOG_LEVEL` | `INFO` | `DEBUG`, `INFO`, `WARN`, or `ERROR` |
 
 Each job uses a private directory:
@@ -229,7 +266,9 @@ to `~/Library/LaunchAgents/`, validate with `plutil -lint`, and load it with
   run per word and leaves spacing to extractor heuristics; the pinned fork
   commit writes Vision's complete line string instead.
 - **Polling never completes:** check structured logs for the job ID and
-  `mac_ocr_exit_code`. The default timeout is 30 minutes.
+  `mac_ocr_exit_code`. The default timeout is 30 minutes. A job that fails with
+  `OCROperationStalled` hit Vision's occasional hang and was killed by the stall
+  check.
 - **Queue full:** increase `OCR_MAX_QUEUED_JOBS` only after checking disk and
   expected load. Azure Core retries some 503 responses automatically.
 - **PDF missing or HTTP 409:** the job is still queued/running or failed. Poll

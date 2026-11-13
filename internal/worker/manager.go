@@ -109,8 +109,11 @@ func (m *Manager) process(id string, number int) {
 		code, publicMessage, diagnostic, exitCode := "OCROperationFailed", "Local OCR processing failed.", runErr.Error(), result.ExitCode
 		if processErr, ok := errors.AsType[*ocr.ProcessError](runErr); ok {
 			code, diagnostic, exitCode = processErr.Code, processErr.Diagnostic, processErr.ExitCode
-			if processErr.Timeout {
+			switch {
+			case processErr.Timeout:
 				publicMessage = "Local OCR processing exceeded its configured timeout."
+			case processErr.Stalled:
+				publicMessage = "Local OCR processing stalled and was stopped."
 			}
 		}
 		_ = m.repo.Update(id, func(current *jobs.Job) {

@@ -11,6 +11,10 @@ import (
 	"time"
 )
 
+// DefaultMacOCRPath is the MAC_OCR_PATH fallback. Packagers override it with
+// -ldflags "-X github.com/beanieboi/paperless-vision-ocr/internal/config.DefaultMacOCRPath=/abs/mac-ocr".
+var DefaultMacOCRPath = "mac-ocr"
+
 type Config struct {
 	Host              string
 	Port              int
@@ -19,6 +23,7 @@ type Config struct {
 	MaxConcurrentJobs int
 	MaxQueuedJobs     int
 	OCRTimeout        time.Duration
+	StallTimeout      time.Duration
 	JobTTL            time.Duration
 	WorkDir           string
 	APIKey            string
@@ -59,6 +64,13 @@ func load(lookup func(string) (string, bool)) (Config, error) {
 	timeoutMinutes, err := parseInt("OCR_TIMEOUT_MINUTES", 30, 1, 24*60)
 	if err != nil {
 		return Config{}, err
+	}
+	stallSeconds, err := parseInt("OCR_STALL_TIMEOUT_SECONDS", 120, 0, 24*60*60)
+	if err != nil {
+		return Config{}, err
+	}
+	if stallSeconds != 0 && stallSeconds < 10 {
+		return Config{}, fmt.Errorf("OCR_STALL_TIMEOUT_SECONDS must be 0 (disabled) or at least 10")
 	}
 	ttlHours, err := parseInt("OCR_JOB_TTL_HOURS", 24, 1, 24*365)
 	if err != nil {
@@ -111,7 +123,7 @@ func load(lookup func(string) (string, bool)) (Config, error) {
 	if !filepath.IsAbs(workDir) {
 		return Config{}, fmt.Errorf("OCR_WORK_DIR must be absolute")
 	}
-	macOCRPath := get("MAC_OCR_PATH", "mac-ocr")
+	macOCRPath := get("MAC_OCR_PATH", DefaultMacOCRPath)
 	if macOCRPath == "" {
 		return Config{}, fmt.Errorf("MAC_OCR_PATH must not be empty")
 	}
@@ -119,9 +131,10 @@ func load(lookup func(string) (string, bool)) (Config, error) {
 	return Config{
 		Host: host, Port: port, Languages: languages, Strategy: strategy,
 		MaxConcurrentJobs: concurrency, MaxQueuedJobs: queued,
-		OCRTimeout: time.Duration(timeoutMinutes) * time.Minute,
-		JobTTL:     time.Duration(ttlHours) * time.Hour,
-		WorkDir:    filepath.Clean(workDir), APIKey: get("OCR_API_KEY", ""),
+		OCRTimeout:   time.Duration(timeoutMinutes) * time.Minute,
+		StallTimeout: time.Duration(stallSeconds) * time.Second,
+		JobTTL:       time.Duration(ttlHours) * time.Hour,
+		WorkDir:      filepath.Clean(workDir), APIKey: get("OCR_API_KEY", ""),
 		MaxUploadBytes: int64(maxUploadMB) * 1024 * 1024,
 		MacOCRPath:     macOCRPath, LogLevel: level,
 	}, nil

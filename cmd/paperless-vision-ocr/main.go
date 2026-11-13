@@ -42,11 +42,11 @@ func run() error {
 		return fmt.Errorf("work directory %s is not writable: %w", cfg.WorkDir, err)
 	}
 
-	runner := &ocr.MacRunner{Path: cfg.MacOCRPath, Languages: cfg.Languages, Strategy: cfg.Strategy, Timeout: cfg.OCRTimeout}
+	runner := &ocr.MacRunner{Path: cfg.MacOCRPath, Languages: cfg.Languages, Strategy: cfg.Strategy, Timeout: cfg.OCRTimeout, StallTimeout: cfg.StallTimeout}
 	startupCtx, cancelStartup := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancelStartup()
 	if err := runner.Ready(startupCtx); err != nil {
-		return fmt.Errorf("mac-ocr executable not found or unusable at %q: %w\n\nInstall the pinned native binary with scripts/install-mac-ocr.sh (see README), or configure MAC_OCR_PATH", cfg.MacOCRPath, err)
+		return fmt.Errorf("mac-ocr executable not found or unusable at %q: %w\n\nInstall the pinned native binary with scripts/install-mac-ocr.sh or the Nix flake (see README), or configure MAC_OCR_PATH", cfg.MacOCRPath, err)
 	}
 	if err := runner.ValidateLanguages(startupCtx); err != nil {
 		return fmt.Errorf("mac-ocr language validation: %w", err)
@@ -67,7 +67,7 @@ func run() error {
 		"mac_ocr_path", cfg.MacOCRPath, "mac_ocr_version", runner.Version(startupCtx),
 		"address", cfg.Address(), "work_dir", cfg.WorkDir, "languages", cfg.Languages,
 		"ocr_strategy", cfg.Strategy, "max_concurrent_jobs", cfg.MaxConcurrentJobs,
-		"max_queued_jobs", cfg.MaxQueuedJobs, "ocr_timeout", cfg.OCRTimeout.String(),
+		"max_queued_jobs", cfg.MaxQueuedJobs, "ocr_timeout", cfg.OCRTimeout.String(), "ocr_stall_timeout", cfg.StallTimeout.String(),
 		"upload_limit_bytes", cfg.MaxUploadBytes, "job_ttl", cfg.JobTTL.String(),
 	)
 
