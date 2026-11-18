@@ -12,8 +12,8 @@ let
   argumentParser = fetchFromGitHub {
     owner = "apple";
     repo = "swift-argument-parser";
-    tag = "1.7.1";
-    hash = "sha256-90ECc3iEmxvOUk9iLKbQdQEz88dOisPqWsJLOFcKUV8=";
+    tag = "1.8.2";
+    hash = "sha256-BWm2ZbNIvlamNp8cxoicFlAcujjhH22VPzs67lEIXWU=";
   };
 in
 swiftPackages.stdenv.mkDerivation (finalAttrs: {
@@ -31,7 +31,7 @@ swiftPackages.stdenv.mkDerivation (finalAttrs: {
     cp -r ${argumentParser} swift-argument-parser
     chmod -R u+w swift-argument-parser
     substituteInPlace Package.swift --replace-fail \
-      '.package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.5.0")' \
+      '.package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.8.2")' \
       '.package(path: "swift-argument-parser")'
     rm Package.resolved
   '';

@@ -9,7 +9,7 @@
     # refuses to start without these features, so only move it together with
     # a tested change here. scripts/install-mac-ocr.sh reads this line.
     mac-ocr = {
-      url = "github:beanieboi/mac-ocr/243c8efb4dfc8061e5b9e368ae328810c8cc7872";
+      url = "github:beanieboi/mac-ocr/b1f3fab325e69606619894df881415c9cc48d906";
       flake = false;
     };
   };

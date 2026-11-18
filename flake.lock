@@ -3,17 +3,17 @@
     "mac-ocr": {
       "flake": false,
       "locked": {
-        "lastModified": 1787827746,
-        "narHash": "sha256-G0pVoAQAsBI3pVzpzV12l7rZDjyRfDwziLDY9BoNxXg=",
+        "lastModified": 1795036933,
+        "narHash": "sha256-bUwLj2wVvKXiYfz4PotesBWTFnh27aOVoMePo0H75EE=",
         "owner": "beanieboi",
         "repo": "mac-ocr",
-        "rev": "243c8efb4dfc8061e5b9e368ae328810c8cc7872",
+        "rev": "b1f3fab325e69606619894df881415c9cc48d906",
         "type": "github"
       },
       "original": {
         "owner": "beanieboi",
         "repo": "mac-ocr",
-        "rev": "243c8efb4dfc8061e5b9e368ae328810c8cc7872",
+        "rev": "b1f3fab325e69606619894df881415c9cc48d906",
         "type": "github"
       }
     },
